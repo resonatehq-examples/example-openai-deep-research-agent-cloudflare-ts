@@ -1,0 +1,22 @@
+{
+  "name": "example-countdown-cloudflare-ts",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "private": true,
+  "scripts": {
+    "fmt": "npx @biomejs/biome check --write",
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "wrangler": "^4.49.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@resonatehq/cloudflare": "^0.1.1",
+    "openai": "^6.9.1"
+  }
+}
