@@ -88,8 +88,8 @@ resonate dev
 Clone the repository
 
 ```
-git clone https://github.com/resonatehq-examples/example-openai-deep-research-agent-gcp-ts
-cd example-openai-deep-research-agent-gcp-ts
+git clone https://github.com/resonatehq-examples/example-openai-deep-research-agent-cloudflare-ts
+cd example-openai-deep-research-agent-cloudflare-ts
 ```
 
 Install dependencies
@@ -117,7 +117,7 @@ resonate invoke <promise-id> --func research --arg <topic> --arg <depth> --targe
 Example
 
 ```
-resonate invoke research.1 --func research --arg "What are distributed systems" --arg 1 --target http://localhost:8080
+resonate invoke research.1 --func research --arg "What are distributed systems" --arg 1 --target http://localhost:8787
 ```
 
 ### 1.6. Inspect the execution
@@ -128,7 +128,7 @@ Use the `resonate tree` command to visualize the research execution.
 resonate tree research.1
 ```
 
-## 2. Deploying to GCP
+## 2. Deploying to Cloudflare
 
 This section guides you through deploying the Deep Research Agent to Cloudflare Platform using Cloud Run for the Resonate server and Cloud Functions for the research function.
 
@@ -148,133 +148,88 @@ To run this project you need an [OpenAI API Key](https://platform.openai.com).
 
 #### Cloudflare Platform
 
-Ensure you have a [Cloudflare Platform](https://cloud.google.com/cloud-console) account, a project, and the necessary permissions as well as the [Cloudflare CLI](https://docs.cloud.google.com/sdk/docs/install) installed and configured.
+Ensure you have a [Cloudflare Platform](https://www.cloudflare.com) account.
 
 > [!WARNING]
 > Cloudflare Platform offers extensive configuration options. The instructions in this guide provide a baseline setup that you will need to adapt for your specific requirements, organizational policies, or security constraints.
 
-### 2.2 Deploy the Resonate Server to Cloud Run
+### 2.1 Create a Hello World Worker
 
-Deploy the Resonate Server with its initial configuration.
+![HelloWorld Worker](doc/CloudflareHelloWorld.png)
 
-**Step 1: Initial deployment**
+### 2.2 Deploy the Resonate Server to Workers
+
+Expose the Resonate server running locally to the cloud
+
+**Step 1: [cloudflare tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/) url (you can use ngrok or similar)**
 
 ```
-gcloud run deploy resonate-server \
-  --image=resonatehqio/resonate:latest \
-  --region=us-central1 \
-  --allow-unauthenticated \
-  --timeout=300 \
-  --port=8080 \
-  --min-instances=1 \
-  --max-instances=1 \
-  --args="serve,--api-http-addr=:8080"
+cloudflared tunnel --url http://localhost:8001
 ```
 
-**Step 2: Configuration**
+**Step 2: Run the server locally**
 
 Configure the Resonate Server with its URL.
 
 ```
-export RESONATE_URL=$(gcloud run services describe resonate-server --region=us-central1 --format='value(status.url)')
-
-gcloud run services update resonate-server \
-  --region=us-central1 \
-  --args="serve,--api-http-addr=:8080,--system-url=$RESONATE_URL"
-```
-
-Print the Resonate Server URL
-
-```
-echo $RESONATE_URL
-```
-
-To view the Resonate Server logs
-
-```
-gcloud run services logs read resonate-server --region=us-central1 --limit=50
-```
-
-### 2.3 Deploy the Deep Research Agent to Cloud Functions
-
-Deploy the research function to Cloud Functions.
-
-```
-gcloud functions deploy research \
-  --gen2 \
-  --runtime=nodejs20 \
-  --region=us-central1 \
-  --source=. \
-  --entry-point=handler \
-  --trigger-http \
-  --allow-unauthenticated \
-  --set-env-vars OPENAI_API_KEY=sk-...
-```
-
-Get the function URL:
-
-```
-export FUNCTION_URL=$(gcloud functions describe research --gen2 --region=us-central1 --format='value(serviceConfig.uri)')
-```
-
-Print the Cloud Function URL
-
-```
-echo $FUNCTION_URL
-```
-
-To view the Cloud Function logs
-
-```
-gcloud functions logs read research --gen2 --region=us-central1 --limit=50
-```
-
-### 2.4 Invoke the Deep Research Agent
-
-Start a research task
-
-```
-resonate invoke <promise-id> --func research --arg <topic> --arg <depth> --target $FUNCTION_URL --server $RESONATE_URL
+resonate dev --system-url <tunnel-url>
 ```
 
 Example
 
 ```
-resonate invoke research.1 --func research --arg "What are distributed systems" --arg 1 --target $FUNCTION_URL --server $RESONATE_URL
+resonate dev --system-url https://purple-lion-2q3j4j.trycloudflare.com
+```
+
+### 2.3 Deploy the Countdown to Workers
+
+Paste the `wrangler.toml` at the root of this directory (replace the name with the name of your newly created worker)
+
+```toml
+name = "XXXXX-XXXXX-XXXX"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+```
+
+Deploy it
+
+```
+npm run deploy
+```
+
+### 2.4 Invoke the Deep Research Agent (Do not forget to set the API key as env variable at cloudflare)
+
+Start a research task
+
+```
+resonate invoke <promise-id> --func research --arg <topic> --arg <depth> --target <function-url>
+```
+
+Example
+
+```
+resonate invoke research.1 --func research --arg "What are distributed systems" --arg 1 --target https://xxxxx-xxxxx-xxxx.abc.workers.dev
 ```
 
 ### 2.5. Inspect the execution
 
-Use the `resonate tree` command to visualize the research execution.
+Use the `resonate tree` command to visualize the countdown execution.
 
 ```
-resonate tree research.1 --server $RESONATE_URL
+resonate tree research.1
 ```
 
-### 2.6 Cleanup
-
-Delete the deployed services:
-
 ```
-# Delete the Cloud Function
-gcloud functions delete research --gen2 --region=us-central1 --quiet
-
-# Delete the Cloud Run service
-gcloud run services delete resonate-server --region=us-central1 --quiet
+research.1
+├── research.1.0 🟢 (run)
+├── research.1.1 🟡 (rpc research)
+│   └── research.1.1.0 🟡 (run)
+├── research.1.2 🟡 (rpc research)
+│   └── research.1.2.0 🟡 (run)
+└── research.1.3 🟡 (rpc research)
+    └── research.1.3.0 🟡 (run)
 ```
 
 ## Troubleshooting
 
-The Deep Research Agent depends on OpenAI and the OpenAI TypeScript and JavaScript SDK. If you are having trouble, verify that your OpenAI credentials are configured correctly and the model is accessible by running the following command in the project's directory:
-
-```
-node -e "import OpenAI from 'openai'; const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY }); (async () => { const res = await client.chat.completions.create({ model: 'gpt-5', messages: [{ role: 'user', content: 'knock knock' }] }); console.log(res.choices[0].message); })();"
-```
-
-If everything is configured correctly, you will see a response from OpenAI such as:
-
-```
-{ role: 'assistant', content: "Who's there?", refusal: null, annotations: []}
-```
-
-If you are still having trouble, please [open an issue](https://github.com/resonatehq-examples/example-openai-deep-research-agent-gcp-ts/issues).
+If you are still having trouble please [open an issue](https://github.com/resonatehq-examples/example-openai-deep-research-agent-cloudflare-ts/issues).
