@@ -130,7 +130,7 @@ resonate tree research.1
 
 ## 2. Deploying to Cloudflare
 
-This section guides you through deploying the Deep Research Agent to Cloudflare Platform using Cloud Run for the Resonate server and Cloud Functions for the research function.
+This section guides you through deploying the Deep Research Agent to Cloudflare Platform.
 
 ### 2.1 Prerequisites
 
@@ -157,7 +157,7 @@ Ensure you have a [Cloudflare Platform](https://www.cloudflare.com) account.
 
 ![HelloWorld Worker](doc/CloudflareHelloWorld.png)
 
-### 2.2 Deploy the Resonate Server to Workers
+### 2.2 Expose the Resonate Server
 
 Expose the Resonate server running locally to the cloud
 
@@ -181,7 +181,7 @@ Example
 resonate dev --system-url https://purple-lion-2q3j4j.trycloudflare.com
 ```
 
-### 2.3 Deploy the Countdown to Workers
+### 2.3 Deploy the Deep Research Agent to Workers
 
 Paste the `wrangler.toml` at the root of this directory (replace the name with the name of your newly created worker)
 
