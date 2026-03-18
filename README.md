@@ -69,11 +69,7 @@ Install the Resonate Server & CLI with [Homebrew](https://docs.resonatehq.io/ope
 brew install resonatehq/tap/resonate
 ```
 
-To run this project you also need an [OpenAI API Key](https://platform.openai.com) and export the key as an environment variable
-
-```
-export OPENAI_API_KEY="sk-..."
-```
+To run this project you also need an [OpenAI API Key](https://platform.openai.com)
 
 ### 1.2. Start Resonate Server
 
@@ -103,7 +99,7 @@ npm install
 Start the Cloudflare Function. By default, the Cloudflare Function will listen at `http://localhost:8080`.
 
 ```
-npm run dev
+npm run dev -- --var OPENAI_API_KEY:sk-...
 ```
 
 ### 1.5. Invoke the Deep Research Agent
@@ -127,6 +123,12 @@ Use the `resonate tree` command to visualize the research execution.
 ```
 resonate tree research.1
 ```
+
+### Notes
+`wrangler dev` does not perfectly replicate the Cloudflare Workers production runtime, which can lead to unexpected behavior—especially under concurrency.
+
+- Requests are often handled by the same isolate / process
+- The runtime may reuse the same Worker instance and memory
 
 ## 2. Deploying to Cloudflare
 
