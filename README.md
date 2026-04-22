@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./assets/banner.png" alt="Deep Research Agent on Cloudflare — Resonate example" />
+</p>
+
 # Deep Research Agent on Cloudflare Workers
 
 A Research Agent powered by Resonate and OpenAI, running on Cloudflare Workers. The Research Agent is a distributed, recursive agent that breaks a research topic into subtopics, researches each subtopic recursively, and synthesizes the results.
